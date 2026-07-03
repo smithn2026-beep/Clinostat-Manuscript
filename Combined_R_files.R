@@ -105,6 +105,209 @@ ggplot(data = dataset, aes(x=time, y=mean, color = Treatment, shape=Treatment)) 
   scale_y_continuous(limits = c(-70,20), expand = c(0,3), breaks = c(-80,-60,-40,-20,0,20,40,60))   
 
 ### ROOT HAIR + MASS ###-----
+RH_counts <- read.csv("C:/Users/smith/OneDrive - Ohio University/Clinostat Manuscript Materials/GitHub repository/Clinostat Manuscript/Mass + Root hair data/UPDATED_RH_COUNTS_CSV.csv")
+
+library(ggplot2)
+library(dplyr)
+library(ggsignif)
+RHgroup <- RH_counts%>%
+  group_by(Length, Treatment) %>%
+  summarize(mean=mean(Number,na.rm = TRUE),
+            se=sd(Number,na.rm = TRUE)/sqrt(n()))
+
+# RH graph------
+
+ggplot(RH_counts, aes(x = Length, y = Number, fill = Treatment)) +
+  geom_boxplot(position = position_dodge(0.7), width = 0.7) +
+  geom_jitter(aes(shape = Treatment),position = position_jitterdodge(jitter.width = 0.15,
+                                                                     dodge.width = 0.7),size = 2,alpha = 0.8) +
+  geom_errorbar(data = RHgroup,inherit.aes = FALSE,
+                aes(x = Length,y = mean,ymin = mean - se,ymax = mean + se,group = Treatment),
+                position = position_dodge(0.7),width = 0.2) +
+  scale_fill_manual(values = c("#696969", "lightgrey")) +
+  xlab("Segment Length") + ylab("Number of Root Hairs") +
+  theme_classic(base_size = 13) +
+  geom_signif(y_position = c(300,310,285,170,160), xmin = c(.8,1.8,2.8,3.8,4.8),
+              xmax = c(1.2,2.2,3.2,4.2,5.2), annotation = c("****","**","**","**","***"),
+              tip_length = 0, textsize = 4)+
+  theme_classic(base_size=13)
+# two sample t test ------
+
+RH_counts$Treatment <- as.character(RH_counts$Treatment)
+
+# subset data by length------
+zero_to_one_cm <- subset(RH_counts, Length == "0-1 cm")
+one_to_two <- subset(RH_counts, Length == "1-2 cm")
+two_to_three_cm <- subset(RH_counts, Length == "2-3 cm")
+three_to_four_cm <- subset(RH_counts, Length == "3-4 cm")
+four_to_five_cm <- subset(RH_counts, Length == "4-5 cm")
+
+# subset the subsets by treatment-------
+con01 <- subset(zero_to_one_cm, Treatment == "Control")
+inoc01 <- subset(zero_to_one_cm, Treatment == "Inoculated")
+
+
+con12 <- subset(one_to_two, Treatment == "Control")
+inoc12 <- subset(one_to_two, Treatment == "Inoculated")
+
+
+con23 <- subset(two_to_three_cm, Treatment == "Control")
+inoc23 <- subset(two_to_three_cm, Treatment == "Inoculated")
+
+
+con34 <- subset(three_to_four_cm, Treatment == "Control")
+inoc34 <- subset(three_to_four_cm, Treatment == "Inoculated")
+
+
+con45 <- subset(four_to_five_cm, Treatment == "Control")
+inoc45 <- subset(four_to_five_cm, Treatment == "Inoculated")
+
+
+
+
+
+# test for normality  0-1  # NORMAL-------
+shapiro.test(con01$Number)
+shapiro.test(inoc01$Number)
+
+hist(con01$Number)
+hist(inoc01$Number)
+
+
+# test for equal variance 0-1
+var.test(con01$Number, inoc01$Number) # FTR, F = 0.14253, num df = 6, denom df = 6, p-value = 0.03192
+
+# Welch two sample t test 0-1 : t = -17.724, df = 7.6763, p-value = 1.668e-07
+
+
+t.test(Number ~ Treatment, data=zero_to_one_cm)
+t.test(con01$Number, inoc01$Number, var.equal = FALSE)
+
+# doing both T tests amounts to the same data and is just done two different
+
+# t = -15.974, df = 4.8288, p-value = 2.296e-05
+
+
+
+
+
+
+
+# prelim test + t test for 1-2------
+shapiro.test(con12$Number) #W = 0.86337, p-value = 0.2725
+shapiro.test(inoc12$Number) #W = 0.80357, p-value = 0.1088
+
+hist(con12$Number)
+hist(inoc12$Number)
+
+
+# test for equal variance 1-2
+var.test(con12$Number, inoc12$Number) # F = 0.0016044, num df = 3, denom df = 3, p-value = 0.0002176
+
+# Welch's t test for unequal variance: t = -9.343, df = 3.0096, p-value = 0.002563
+t.test(Number ~ Treatment, data=one_to_two)
+t.test(con12$Number, inoc12$Number, var.equal = FALSE)
+
+
+# prelim test + t test 2-3-----
+shapiro.test(con23$Number) #W = 0.94466, p-value = 0.683
+shapiro.test(inoc23$Number) #W = 0.97342, p-value = 0.8625
+
+hist(con23$Number)
+hist(inoc23$Number)
+
+
+# test for equal variance 1-2
+var.test(con23$Number, inoc23$Number) # F = 0.0017937, num df = 3, denom df = 3, p-value = 0.0002571
+
+# Welch's t test for unequal variance: t = -6.789, df = 3.0108, p-value = 0.006459
+t.test(Number ~ Treatment, data=two_to_three_cm)
+t.test(con23$Number, inoc23$Number, var.equal = FALSE)
+
+
+
+
+
+
+
+# prelim test + t test 3-4------
+shapiro.test(con34$Number) #W = 0.93788, p-value = 0.6414
+shapiro.test(inoc34$Number) #W = 0.7864, p-value = 0.07998
+
+hist(con34$Number)
+hist(inoc34$Number)
+
+
+# test for equal variance 3-4
+var.test(con34$Number, inoc34$Number) # F = 0.055582, num df = 3, denom df = 3, p-value = 0.04037
+
+# Welch's t test for unequal variance: t = -5.2315, df = 6, p-value = 0.001954
+t.test(Number~Treatment, data=three_to_four_cm, var.equal= TRUE)
+t.test(con34$Number, inoc34$Number, var.equal= TRUE)
+
+
+
+
+# prelim test + t test 4-5------
+shapiro.test(con45$Number) #W = 0.8494, p-value = 0.2242
+shapiro.test(inoc45$Number) #W = 0.9151, p-value = 0.5098
+
+hist(con45$Number)
+hist(inoc45$Number)
+
+
+# test for equal variance 4-5
+var.test(con45$Number, inoc45$Number) #F = 0.011926, num df = 3, denom df = 3, p-value = 0.004329
+
+# Wt test for equal variance: t = -8.9381, df = 6, p-value = 0.0001094
+t.test(Number~Treatment, data=four_to_five_cm, var.equal= TRUE)
+t.test(con45$Number, inoc45$Number, var.equal= TRUE)
+
+
+
+
+
+
+
+
+
+# Shoot mass t tests and graphs-----
+Mass_SSEP <- read.csv("C:/Users/smith/OneDrive - Ohio University/Clinostat Manuscript Materials/GitHub repository/Clinostat Manuscript/Mass + Root hair data/Mass Data.csv")
+shoots <- subset(Mass_SSEP, Organ == "Shoot")
+
+Mass_SSEP$Treatment <- as.factor(Mass_SSEP$Treatment)
+Mass_SSEP$Organ <- as.factor(Mass_SSEP$Organ)
+
+con_shoot <- subset(shoots, Treatment == "Control")
+
+inoc_shoot <- subset(shoots, Treatment == "Inoculated")
+
+
+# test for shoots -------
+shapiro.test(con_shoot$Mass) # norm
+shapiro.test(inoc_shoot$Mass) # norm
+
+hist(con_shoot$Mass)
+hist(inoc_shoot$Mass)
+
+
+# test for equal variance - equal var
+var.test(con_shoot$Ind_Mass, inoc_shoot$Ind_Mass) # F = 2.5329, num df = 15, denom df = 15, p-value = 0.08184
+
+#  two sample t test 
+
+t.test(con_shoot$Ind_Mass, inoc_shoot$Ind_Mass, var.equal= TRUE) #t = -6.0003, df = 30, p-value = 1.393e-06
+
+#graph
+ggplot(data = shoots, aes(x = Treatment, y = Mass, fill = Treatment)) +
+  geom_boxplot(width = 0.6, outlier.shape = NA, color = "black") +
+  geom_jitter(width = 0.1, size = 3) +
+  scale_fill_manual(values = c("Control" = "#696969", "Inoculated" = "lightgrey")) +
+  labs(x = "Treatment", y = "Average Mass (g)") +
+  geom_signif(y_position = c(.082), xmin = c(1.9), xmax = c(1.1), annotation = c("****"),tip_length = 0, textsize = 4)+
+  theme(legend.position = "none")+
+  theme_classic(base_size=13)
+
 
 ### PIN1:GFP ###-----
 library(ggplot2)
